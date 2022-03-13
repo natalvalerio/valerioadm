@@ -32,7 +32,7 @@ function Home() {
 
             <p><Link href="/sobre"><a>Sobre</a></Link></p>
    
-            <span>Teste -----</span>
+            <span>Teste</span>
             </body>
         </div>
     )
