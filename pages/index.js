@@ -27,7 +27,7 @@ function Home() {
             <div align="center">
             <p><Link href="/contar"><a><button class={styles.botao}>CONTADOR</button></a></Link></p>
             
-            <p><Link href="/teste"><a><button class={styles.botao}>TESTE</button></a></Link></p>            
+            <p><Link href="/celular"><a><button class={styles.botao}>TESTE</button></a></Link></p>            
 
             <p><Link href="/func"><a><button class={styles.botao}>FUNÇÕES</button></a></Link></p>            
 
