@@ -1,0 +1,10 @@
+.corpo {
+    color: rgb(243, 12, 231);
+    background: floralwhite; 
+}
+
+.imagens {
+    border-radius: 50px;
+    border-style: solid;
+    border-color: chartreuse;
+}
