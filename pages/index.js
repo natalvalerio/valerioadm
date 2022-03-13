@@ -31,9 +31,7 @@ function Home() {
             <p><Link href="/func"><a>Funções</a></Link></p>            
 
             <p><Link href="/sobre"><a>Sobre</a></Link></p>
-   
-            <span>Teste</span>
-            <p>Novo commit</p>
+
             </body>
         </div>
     )
