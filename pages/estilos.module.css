@@ -1,5 +1,5 @@
 .corpo {
-    color: rgb(243, 12, 231);
+    color: rgb(61, 50, 2);
     background: floralwhite; 
 }
 
@@ -7,4 +7,13 @@
     border-radius: 50px;
     border-style: solid;
     border-color: chartreuse;
+}
+
+.corrente {
+    color:rgb(133, 4, 4)
+}
+
+.botao {
+    color:rgb(133, 4, 4);
+    background-color:  chartreuse;
 }

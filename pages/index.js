@@ -24,14 +24,15 @@ function Home() {
             </a></Link>
             </div>
             
-            <p><Link href="/contar"><a>Contador</a></Link></p>
+            <div align="center">
+            <p><Link href="/contar"><a><button class={styles.botao}>CONTADOR</button></a></Link></p>
             
-            <p><Link href="/teste"><a>Teste</a></Link></p>            
+            <p><Link href="/teste"><a><button class={styles.botao}>TESTE</button></a></Link></p>            
 
-            <p><Link href="/func"><a>Funções</a></Link></p>            
+            <p><Link href="/func"><a><button class={styles.botao}>FUNÇÕES</button></a></Link></p>            
 
-            <p><Link href="/sobre"><a>Sobre</a></Link></p>
-
+            <p><Link href="/sobre"><a><button class={styles.botao}>SOBRE</button></a></Link></p>
+            </div>
             </body>
         </div>
     )
