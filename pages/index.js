@@ -33,6 +33,7 @@ function Home() {
             <p><Link href="/sobre"><a>Sobre</a></Link></p>
    
             <span>Teste</span>
+            <p>Novo commit</p>
             </body>
         </div>
     )
