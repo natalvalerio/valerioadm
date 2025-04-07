@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exportar Dados</title>
+</head>
+<body>
+    <button onclick="exportToCSV()">Exportar CSV</button>
+
+    <script>
+        async function exportToCSV() {
+            try {
+                const response = await fetch("https://natalvalerio.pythonanywhere.com/api/sql?sql=select%20*%20from%20qualit");
+                const data = await response.json();
+
+                if (!data || data.length === 0) {
+                    alert("Nenhum dado encontrado.");
+                    return;
+                }
+
+                // Obtendo as chaves (colunas)
+                const headers = Object.keys(data[0]);
+                const csvRows = [];
+                
+                // Adicionando cabeçalhos ao CSV
+                csvRows.push(headers.join(","));
+
+                // Adicionando os dados ao CSV
+                data.forEach(row => {
+                    const values = headers.map(header => `"${row[header]}"`);
+                    csvRows.push(values.join(","));
+                });
+
+                // Criando o Blob
+                const csvContent = csvRows.join("\n");
+                const blob = new Blob([csvContent], { type: "text/csv" });
+                const url = URL.createObjectURL(blob);
+
+                // Criando um link para download
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "dados.csv";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } catch (error) {
+                console.error("Erro ao exportar:", error);
+                alert("Erro ao buscar os dados.");
+            }
+        }
+    </script>
+</body>
+</html>

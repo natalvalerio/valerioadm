@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Atendimentos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.4/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.4/vfs_fonts.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        table { width: 80%; margin: auto; border-collapse: collapse; }
+        th, td { border: 1px solid black; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .total { font-weight: bold; color: red; }
+    </style>
+</head>
+<body>
+    <h2>Relatório de Atendimentos</h2>
+    <label>Data Inicial: <input type="date" id="dataInicio"></label>
+    <label>Data Final: <input type="date" id="dataFim"></label>
+    <button onclick="gerarRelatorio()">Gerar Relatório</button>
+    <button onclick="exportarPDF()">Exportar PDF</button>
+    <table id="tabela">
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Quantidade</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+            <tr>
+                <td class="total">TOTAL DE INTERAÇÕES</td>
+                <td class="total" id="total"></td>
+            </tr>
+        </tfoot>
+    </table>
+    <script>
+        async function gerarRelatorio() {
+            const dataInicio = document.getElementById("dataInicio").value;
+            const dataFim = document.getElementById("dataFim").value;
+            if (!dataInicio || !dataFim) {
+                alert("Selecione um período!");
+                return;
+            }
+            
+            const response = await fetch(`https://natalvalerio.pythonanywhere.com/api/sql?sql=SELECT canal, COUNT(*) as quantidade FROM qualit WHERE data BETWEEN '${dataInicio}' AND '${dataFim}' GROUP BY canal`);
+            const data = await response.json();
+            
+            const tbody = document.querySelector("#tabela tbody");
+            tbody.innerHTML = "";
+            let total = 0;
+            
+            data.forEach(row => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `<td>${row.canal}</td><td>${row.quantidade}</td>`;
+                tbody.appendChild(tr);
+                total += row.quantidade;
+            });
+            document.getElementById("total").textContent = total;
+        }
+
+        function exportarPDF() {
+            const tabela = document.getElementById("tabela");
+            const linhas = tabela.querySelectorAll("tr");
+            let conteudo = [["Tipo", "Quantidade"]];
+            
+            linhas.forEach(linha => {
+                const colunas = linha.querySelectorAll("td, th");
+                let linhaArray = [];
+                colunas.forEach(coluna => linhaArray.push(coluna.textContent));
+                conteudo.push(linhaArray);
+            });
+            
+            const docDefinition = {
+                content: [
+                    { text: "Relatório de Atendimentos", style: "header" },
+                    { table: { headerRows: 1, body: conteudo } }
+                ],
+                styles: { header: { fontSize: 18, bold: true, margin: [0, 0, 0, 10] } }
+            };
+            pdfMake.createPdf(docDefinition).download("Relatorio.pdf");
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="img/icon.png" rel="shortcut icon" type="image/x-icon" >
+	<link href="css/css.css" rel="stylesheet"    type="text/css">
+    <title>Geração de BACKUPs</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+</head>
+<body>
+
+<div id="app">
+    <img src="img/logo.png" width="200" alt="Logo da Empresa">
+	<h2>Geração de BACKUP</h2>
+	
+    <button @click="generateDump" :disabled="loading">
+        {{ loading ? 'Gerando...' : 'BACKUP' }}
+    </button>
+    <p v-if="message">{{ message }}</p>
+	
+	<BR><BR><a href="javascript:window.history.back()"><button>VOLTAR 🔙</button></a>
+		
+	<footer>
+        <span id="dateTime"></span>
+    </footer>
+</div>
+
+<script>
+const { createApp, ref, onMounted } = Vue;
+
+createApp({
+    setup() {
+        const apiBaseUrl = "https://natalvalerio.pythonanywhere.com/api/sql?sql=";
+        const tables = ["nichos", "situacoes", "canais", "status", "clientes", "user", "qualit"];
+        const loading = ref(false);
+        const message = ref("");
+
+        const fetchTableData = async (table) => {
+            const query = `SELECT * FROM ${table};`;
+            const response = await fetch(apiBaseUrl + encodeURIComponent(query));
+            return response.json();
+        };
+
+        const fetchTableSchema = async () => {
+            const query = `SELECT sql FROM sqlite_master WHERE type='table' AND name IN ('${tables.join("','")}');`;
+            const response = await fetch(apiBaseUrl + encodeURIComponent(query));
+            return response.json();
+        };
+
+        const generateDump = async () => {
+            loading.value = true;
+            message.value = "Gerando BACKUP...";
+
+            let dumpSQL = "PRAGMA foreign_keys=off;\n\n";
+            const schemas = await fetchTableSchema();
+
+            schemas.forEach(row => {
+                if (row.sql) {
+                    dumpSQL += row.sql + ";\n\n";
+                }
+            });
+
+            for (const table of tables) {
+                const data = await fetchTableData(table);
+                if (data.length > 0) {
+                    let columns = Object.keys(data[0]);
+                    if (columns.includes("id")) {
+                        columns = ["id", ...columns.filter(col => col !== "id")];
+                    }
+
+                    dumpSQL += `INSERT INTO ${table} (${columns.join(", ")}) VALUES\n`;
+
+                    const values = data.map(row => 
+                        `(${columns.map(col => `'${row[col]}'`).join(", ")})`
+                    ).join(",\n") + ";\n\n";
+
+                    dumpSQL += values;
+                }
+            }
+
+            dumpSQL += "PRAGMA foreign_keys=on;\n";
+
+            const blob = new Blob([dumpSQL], { type: "text/sql" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "dump.sql";
+            a.click();
+
+            message.value = "BACKUP gerado com sucesso!";
+            loading.value = false;
+        };
+
+        // Quando a página carregar, verifica se o dump deve ser gerado automaticamente
+        onMounted(() => {
+            if (localStorage.getItem("gerarDump") === "true") {
+                localStorage.removeItem("gerarDump");
+                generateDump();
+            }
+        });
+
+        return { generateDump, loading, message };
+    }
+}).mount("#app");
+</script>
+
+
+</body>
+</html>

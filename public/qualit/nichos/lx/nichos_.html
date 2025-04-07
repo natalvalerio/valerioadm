@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="img/icon.png" rel="shortcut icon" type="image/x-icon" >
+	<link href="css/css.css" rel="stylesheet"    type="text/css">
+	<script src="js/nichos.js"></script>
+	<script src="js/js.js"></script>
+    <title>NICHOS</title>
+</head>
+<body>
+    <header>
+		<img src="img/logo.png" width="200" alt="Logo da Empresa">
+		<h2>NICHOS</h2>
+	
+    </header>
+
+    <footer>
+        <span id="dateTime"></span>
+    </footer>
+	<main>
+	<BR/>
+    <input type="text" id="Pesquisar" placeholder="🔎 Pesquisar..."  onkeyup="Pesquisar()"> <!--onblur onkeyup-->
+
+    <button onclick="NOVON()">NOVO ➕</button>
+    <!--button onclick="SALVARN()">SALVAR ✅</button-->
+	<a href="javascript:window.history.back()"><button>VOLTAR 🔙</button></a>
+
+        <table>
+        <thead>
+            <tr>
+                <th>NICHOS</th>
+                <th>AÇÕES</th>
+				<div id="loader">
+					<img src="img/loading.gif" alt="Carregando...">
+				</div>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+	</main>
+</body>
+</html>

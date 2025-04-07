@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="css/css.css" rel="stylesheet" type="text/css">
+    <title>Login</title>
+    <script>
+	//--------------------------------------------------------------------------
+	// FUNÇÕES PARA LOGIN
+	async function loginUser(event) {
+		event.preventDefault(); // Evita o envio do formulário
+	
+		const username = document.getElementById("username").value;
+		const password = document.getElementById("password").value;
+	
+	
+		try {
+			const response = await fetch("https://natalvalerio.pythonanywhere.com/api/sql?sql=select usuario, senha from usuarios");
+			const data = await response.json();
+	
+			// Procurando usuário com as credenciais fornecidas
+			const user = data.find(user => user.usuario === username && user.senha === password);
+	
+			if (user) {
+				// Se o usuário for encontrado, redireciona para a página principal
+				window.location.href = "app.html"; // Redireciona para a página principal (relatório)
+			} else {
+				// Caso contrário, exibe mensagem de erro
+				document.getElementById("error-message").textContent = "Usuário ou senha incorretos!";
+			}
+		} catch (error) {
+			console.error("Erro na autenticação:", error);
+			document.getElementById("error-message").textContent = "Erro ao verificar as credenciais. Tente novamente!";
+		}
+	}
+	
+	
+        // Função para criar o select com opções
+        function createSelectC(options, selectedValue = "") {
+            let select = document.createElement("select");
+            options.forEach(option => {
+                let opt = document.createElement("option");
+                opt.value = option;
+                opt.textContent = option;
+                if (option === selectedValue) {
+                    opt.selected = true;
+                }
+                select.appendChild(opt);
+            });
+            return select;
+        }
+
+        // Espera o carregamento completo da página antes de manipular o DOM
+        window.onload = function() {
+            const clientes = ["TESTE 01", "ROMARIO ALVES ME", "CLIENTE 02", "CLIENTE 03"];
+            
+            // Cria o select com os clientes
+            const clientSelect = createSelectC(clientes, "");
+
+            // Encontra o contêiner onde o select será inserido
+            const cliente = document.getElementById("cliente");
+
+            // Adiciona o select ao contêiner
+            cliente.appendChild(clientSelect);
+
+            // Adiciona o evento de envio do formulário
+            document.getElementById("loginForm").addEventListener("submit", function(event) {
+                event.preventDefault(); // Impede o envio do formulário antes de processar
+                
+                const clienteSelecionado = clientSelect.value; // Captura o cliente selecionado
+                //alert(clienteSelecionado); // Exibe o cliente selecionado em um alert
+
+                // Salva o cliente no localStorage
+                localStorage.setItem('cliente', clienteSelecionado);
+
+                // Redireciona para a próxima página
+                window.location.href = 'app.html'; // Redireciona para app.html
+            });
+        };
+    </script>
+</head>
+<body class="body_login">
+    <div class="login-container">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <input class="input_login" type="text" id="username" placeholder="Usuário" required>
+            <input class="input_login" type="password" id="password" placeholder="Senha" required>
+            
+            <!-- Espaço onde o select de cliente será inserido -->
+            <div class="select_login" id="cliente"></div>
+            
+            <button class="button_login" type="submit">LOGAR</button>
+            <div class="error" id="error-message"></div>
+        </form>
+    </div>
+</body>
+</html>

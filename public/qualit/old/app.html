@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="img/icon.png" rel="shortcut icon" type="image/x-icon" >
+	<link href="css/css.css" rel="stylesheet"    type="text/css">
+	<script src="js/js.js"></script>
+    <title>Relatório Diário de Atendimento</title>
+</head>
+<body>
+    <header>
+		<img src="img/logo.png" width="200" alt="Logo da Empresa">
+		<h2>Relatório Diário de Atendimento</h2>
+		<script>
+		const cliente = localStorage.getItem('cliente');
+		//alert(cliente)
+		</script>
+	
+    </header>
+
+    <footer>
+        <span id="dateTime"></span>
+    </footer>
+	<main>
+	<BR/>
+    <input type="text" id="Pesquisar" placeholder="🔎 Pesquisar..."  onkeyup="Pesquisar()"> <!--onblur onkeyup-->
+    <!--button onclick="addRow()">NOVO</button-->
+    <button onclick="NOVO()">NOVO ➕</button>
+    <button onclick="SALVAR()">SALVAR 💾</button>
+    <table>
+        <thead>
+            <tr>
+                <th>NOME</th>
+                <th>CONTATO</th>
+                <th>NICHO</th>
+                <th>SITUAÇÃO</th>
+                <th>DATA</th>
+                <th>HORA</th>
+                <th>CANAL</th>
+                <th>OBSERVAÇÕES</th>
+                <th>STATUS</th>
+                <th>AÇÕES</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+	</main>
+</body>
+</html>

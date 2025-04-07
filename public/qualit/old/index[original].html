@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="css/css.css" rel="stylesheet" type="text/css">
+    <link href="img/icon.png" rel="shortcut icon" type="image/x-icon">
+    <title>Login</title>
+    <script>
+        // Função para autenticar o usuário
+        async function loginUser(event) {
+            event.preventDefault(); // Impede o envio do formulário
+
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            try {
+                const response = await fetch("https://natalvalerio.pythonanywhere.com/api/sql?sql=select usuario, senha, clientes from user");
+                const data = await response.json();
+
+                // Verificação das credenciais
+                const user = data.find(user => user.usuario === username && user.senha === password);
+
+                if (user) {
+                    // Login bem-sucedido: obter os clientes do usuário logado
+                    let clientes = user.clientes.split(","); // Divide os clientes separados por vírgula
+
+                    // Criação do select com os clientes do usuário logado
+                    const clientSelect = createSelectC(clientes);
+
+                    // Adiciona o select de clientes no DOM
+                    document.getElementById("cliente").innerHTML = ""; // Limpa qualquer conteúdo anterior
+                    document.getElementById("cliente").appendChild(clientSelect);
+
+                    // Armazenar informações no localStorage
+                    localStorage.setItem('usuario', username);
+
+                } else {
+                    // Erro de autenticação
+                    document.getElementById("error-message").textContent = "Usuário ou senha incorretos!";
+                }
+            } catch (error) {
+                console.error("Erro na autenticação:", error);
+                document.getElementById("error-message").textContent = "Erro ao verificar as credenciais. Tente novamente!";
+            }
+        }
+
+        // Função para criar o select de clientes
+        function createSelectC(options) {
+            let select = document.createElement("select");
+            select.id = "cliente-select"; // Adiciona um ID para facilitar o acesso
+
+            // Adiciona uma opção vazia no início
+            let emptyOption = document.createElement("option");
+            emptyOption.value = ""; // Valor vazio
+            emptyOption.textContent = ""; // Texto vazio
+            select.appendChild(emptyOption);
+
+            options.forEach(option => {
+                let opt = document.createElement("option");
+                opt.value = option;
+                opt.textContent = option;
+                select.appendChild(opt);
+            });
+
+            // Adiciona um evento para redirecionar após selecionar o cliente
+            select.addEventListener("change", () => {
+                const selectedCliente = select.value.trim();
+				localStorage.setItem('cliente', selectedCliente); // Armazenar cliente selecionado
+				//let cliente=localStorage.getItem('cliente')
+				//let usuario=localStorage.getItem('usuario')
+				//if (!cliente || !usuario) {
+				//	alert("Cliente ou usuário não definido!");
+				//}
+                window.location.href = "qualit.html"; // Redireciona para a página
+            });
+
+            return select;
+        }
+
+        // Carregamento da página
+        window.onload = function() {
+            // Agora o evento de login será tratado apenas pela função loginUser
+            document.getElementById("loginForm").addEventListener("submit", loginUser);
+        };
+    </script>
+</head>
+<body class="body_login">
+    <div class="login-container">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <div class="select_login" id="usuario">
+                <input class="input_login" type="text" id="username" placeholder="Usuário" required>
+            </div>
+            <input class="input_login" type="password" id="password" placeholder="Senha" required>
+
+            <div class="select_login" id="cliente"></div>
+
+            <button class="button_login" type="submit">LOGAR</button>
+            <div class="error" id="error-message"></div>
+        </form>
+    </div>
+</body>
+</html>

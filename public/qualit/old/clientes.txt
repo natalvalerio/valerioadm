@@ -1,0 +1,30 @@
+Preciso de vossa ajuda...
+
+Tenho algumas tabelas:
+Tabela		| Campos
+nichos		| nichos
+situacoes	| situacoes
+canais		| canais
+status		| status
+clientes	| cliente, nichos, situacoes, canais, status 
+
+A tabela clientes não froi criada. Eu preciso criar 
+a tabela e gerir fazer um crud para ela de forma que 
+para os campos (nichos, situacoes, canais, status) 
+eu possa escolher um ou mais itens de cada uma das tabelas anteriores.
+
+Vou postar algumas informações úteis (links de api):
+Para gearar uma lista com os nichos:
+https://natalvalerio.pythonanywhere.com/api/select/nichos
+situacoes:
+https://natalvalerio.pythonanywhere.com/api/select/situacoes
+canais
+https://natalvalerio.pythonanywhere.com/api/select/canais
+status
+https://natalvalerio.pythonanywhere.com/api/select/status
+
+E para ler dados na tabela clientes pode usar:
+https://natalvalerio.pythonanywhere.com/api/sql?sql=select * from clientes
+Para gravar, só trocar o sql para gravar.
+
+

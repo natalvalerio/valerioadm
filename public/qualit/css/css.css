@@ -1,0 +1,235 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #A1A1D6;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    z-index: 1000;
+}
+
+footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #FFE680;
+    color: #393996;
+    text-align: center;
+    padding: 10px;
+}
+
+main {
+    margin-top: 120px;
+    margin-bottom: 60px;
+    padding: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+table, th, td {
+    border: 1px solid black;
+}
+
+th {
+    background-color: #FFE680;
+    color: #393996;
+    position: sticky;
+    top: 0;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+
+td input, td select {
+    width: 100%;
+    border: none;
+    background-color: transparent;
+    outline: none;
+    font-size: 14px;
+}
+
+td input[type="date"], td input[type="time"] {
+    width: auto;
+}
+
+#Pesquisar {
+    padding: 8px;
+    font-size: 14px;
+    width: 300px;
+}
+
+#Pesquisar::placeholder {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+button {
+    padding: 10px 15px;
+    background-color: #A1A1D6;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+button:hover {
+    background-color: #393996;
+}
+
+.button_login {
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.button_login:hover {
+    background-color: #45a049;
+}
+
+.input_login, .select_login select {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.select_login select {
+    appearance: none;
+    background-color: white;
+    cursor: pointer;
+}
+
+.login-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 300px;
+}
+
+.error {
+    color: red;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.body_login {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center; /* Centraliza horizontalmente */
+    align-items: center; /* Centraliza verticalmente */
+    height: 100vh; /* Faz o body ocupar 100% da altura da tela */
+    background-color: #f4f4f4;
+    margin: 0; /* Remove margens padrão */
+}
+
+
+
+#loader {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.8);
+    width: 100vw;
+    height: 100vh;
+    z-index: 2000;
+}
+
+#loader img {
+    width: 400px; 
+}
+
+.quadrado {
+    padding: 8px;
+    font-size: 14px;
+}
+
+#relatorio {
+	display: none;
+}
+
+
+
+
+        /* Estilos para os botões de ação */
+        .action-btn {
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.3s, transform 0.1s;
+            display: inline-block;
+        }
+        .action-btn.save {
+            background-color: #4CAF50; /* Verde para salvar */
+            color: white;
+        }
+        .action-btn.delete {
+            background-color: #d33; /* Vermelho para excluir */
+            color: white;
+        }
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Estilos para o loader */
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .loader-overlay img {
+            width: 400px;
+        }
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity 0.3s;
+        }
+        .fade-enter-from, .fade-leave-to {
+            opacity: 0;
+        }
+
+
+
+
+<!--
+verde #4CAF50;
+amarelo #FFCC00;
+azul #393996;
+Amarelo claro: #FFE680 (uma versão mais clara do #FFCC00).
+Azul claro: #A1A1D6 (uma versão mais clara do #393996).
+-->

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Atendimentos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        async function gerarRelatorio() {
+            const dataInicio = document.getElementById("dataInicio").value;
+            const dataFim = document.getElementById("dataFim").value;
+            if (!dataInicio || !dataFim) {
+                alert("Selecione um período válido!");
+                return;
+            }
+            
+            let query = `SELECT * FROM qualit WHERE data BETWEEN '${dataInicio}' AND '${dataFim}'`;
+            let url = `https://natalvalerio.pythonanywhere.com/api/sql?sql=${encodeURIComponent(query)}`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (!data || data.length === 0) {
+                    alert("Nenhum dado encontrado.");
+                    return;
+                }
+                
+                processarDados(data);
+            } catch (error) {
+                console.error("Erro ao buscar dados:", error);
+                alert("Erro ao buscar os dados.");
+            }
+        }
+
+        function processarDados(dados) {
+            let totalAtendimentos = dados.length;
+            let canais = {};
+            let nichos = {};
+            let usuarios = {};
+            let status = {};
+            
+            dados.forEach(item => {
+                canais[item.canal] = (canais[item.canal] || 0) + 1;
+                nichos[item.nicho] = (nichos[item.nicho] || 0) + 1;
+                usuarios[item.usuario] = (usuarios[item.usuario] || 0) + 1;
+                status[item.status] = (status[item.status] || 0) + 1;
+            });
+            
+            document.getElementById("total").textContent = totalAtendimentos;
+            exibirResultados("resultadoCanais", canais);
+            exibirResultados("resultadoNichos", nichos);
+            exibirResultados("resultadoUsuarios", usuarios);
+            exibirResultados("resultadoStatus", status);
+        }
+
+        function exibirResultados(id, obj) {
+            let html = "";
+            for (let key in obj) {
+                html += `<p><strong>${key}:</strong> ${obj[key]}</p>`;
+            }
+            document.getElementById(id).innerHTML = html;
+        }
+    </script>
+</head>
+<body>
+    <h2>Relatório de Atendimentos</h2>
+    <label>Data Inicial: <input type="date" id="dataInicio"></label>
+    <label>Data Final: <input type="date" id="dataFim"></label>
+    <button onclick="gerarRelatorio()">Gerar Relatório</button>
+    
+    <h3>Total de Atendimentos: <span id="total">0</span></h3>
+    <h3>Atendimentos por Canal</h3>
+    <div id="resultadoCanais"></div>
+    <h3>Atendimentos por Nicho</h3>
+    <div id="resultadoNichos"></div>
+    <h3>Atendimentos por Usuário</h3>
+    <div id="resultadoUsuarios"></div>
+    <h3>Atendimentos por Status</h3>
+    <div id="resultadoStatus"></div>
+</body>
+</html>

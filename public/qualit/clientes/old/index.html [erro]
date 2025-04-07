@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="../img/icon.png" rel="shortcut icon" type="image/x-icon">
+    <link href="../css/css.css" rel="stylesheet" type="text/css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../js/js.js"></script>
+    <title>CLIENTES</title>
+    <style>
+        .container { display: flex; gap: 20px; }
+        .column { flex: 1; }
+        table, th, td { border: 1px solid black; border-collapse: collapse; padding: 5px; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <img src="../img/logo.png" width="200" alt="Logo da Empresa">
+            <h2>CLIENTES</h2>
+        </header>
+
+        <footer>
+            <span id="dateTime"></span>
+        </footer>
+
+        <main>
+            <br/>
+            <input 
+                type="text" 
+                id="Pesquisar" 
+                placeholder="🔎 Pesquisar..." 
+                v-model="searchTerm" 
+                @keyup="Pesquisar"
+            >
+            <button @click="NOVON">NOVO ➕</button>
+            <a href="javascript:window.history.back()">
+                <button>VOLTAR 🔙</button>
+            </a>
+
+            <br><br>
+            Nome do Cliente: 
+            <input 
+                type="text" 
+                id="cliente" 
+                placeholder="Nome do Cliente" 
+                class="input_login" 
+                v-model="novoCliente.cliente"
+            >
+
+            <div class="container">
+                <div class="column">
+                    <h4>Nichos</h4>
+                    <label v-for="item in nichos" :key="item.nichos">
+                        <input type="checkbox" :value="item.nichos" v-model="novoCliente.nichos"> {{ item.nichos }}<br>
+                    </label>
+                </div>
+                <div class="column">
+                    <h4>Situações</h4>
+                    <label v-for="item in situacoes" :key="item.situacoes">
+                        <input type="checkbox" :value="item.situacoes" v-model="novoCliente.situacoes"> {{ item.situacoes }}<br>
+                    </label>
+                </div>
+                <div class="column">
+                    <h4>Canais</h4>
+                    <label v-for="item in canais" :key="item.canais">
+                        <input type="checkbox" :value="item.canais" v-model="novoCliente.canais"> {{ item.canais }}<br>
+                    </label>
+                </div>
+                <div class="column">
+                    <h4>Status</h4>
+                    <label v-for="item in status" :key="item.status">
+                        <input type="checkbox" :value="item.status" v-model="novoCliente.status"> {{ item.status }}<br>
+                    </label>
+                </div>
+            </div>
+
+            <button @click="salvarCliente">Salvar Cliente</button>
+
+            <h3>Clientes Cadastrados</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Nichos</th>
+                        <th>Situações</th>
+                        <th>Canais</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="cliente in filteredClientes" :key="cliente.cliente">
+                        <td>{{ cliente.cliente }}</td>
+                        <td>{{ cliente.nichos }}</td>
+                        <td>{{ cliente.situacoes }}</td>
+                        <td>{{ cliente.canais }}</td>
+                        <td>{{ cliente.status }}</td>
+                        <td>
+                            <button @click="editarCliente(cliente)">Editar</button>
+                            <button @click="excluirCliente(cliente.cliente)">Excluir</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <transition name="fade">
+                <div v-if="loading" class="loader-overlay">
+                    <img src="../img/loading.gif" alt="Carregando...">
+                </div>
+            </transition>
+        </main>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                const clientes = ref([]);
+                const nichos = ref([]);
+                const situacoes = ref([]);
+                const canais = ref([]);
+                const status = ref([]);
+                const searchTerm = ref('');
+                const loading = ref(false);
+                const novoCliente = ref({
+                    cliente: '',
+                    nichos: [],
+                    situacoes: [],
+                    canais: [],
+                    status: []
+                });
+                let clienteEditando = null;
+
+                // Função para buscar dados de uma tabela
+                async function fetchOptions(table) {
+                    const data = await crudOperation(table, 'read', {}, loading);
+                    return data || [];
+                }
+
+                // Função para carregar todos os dados
+                async function carregarDados() {
+                    nichos.value = await fetchOptions('nichos');
+                    situacoes.value = await fetchOptions('situacoes');
+                    canais.value = await fetchOptions('canais');
+                    status.value = await fetchOptions('status');
+                    await carregarClientes();
+                }
+
+                // Função para carregar clientes
+                async function carregarClientes() {
+                    const data = await crudOperation('clientes', 'read', {}, loading);
+                    if (data) clientes.value = data;
+                }
+
+                // Função para adicionar novo cliente (limpar formulário)
+                function NOVON() {
+                    novoCliente.value = { cliente: '', nichos: [], situacoes: [], canais: [], status: [] };
+                    clienteEditando = null;
+                }
+
+                // Função para salvar cliente
+                async function salvarCliente() {
+                    if (!novoCliente.value.cliente) {
+                        showWarning('Nome do cliente é obrigatório');
+                        return;
+                    }
+
+                    const data = {
+                        cliente: novoCliente.value.cliente,
+                        nichos: novoCliente.value.nichos.join(','),
+                        situacoes: novoCliente.value.situacoes.join(','),
+                        canais: novoCliente.value.canais.join(','),
+                        status: novoCliente.value.status.join(',')
+                    };
+
+                    if (clienteEditando) {
+                        await crudOperation('clientes', 'update', { ...data, id: clienteEditando }, loading, carregarClientes);
+                        clienteEditando = null;
+                    } else {
+                        await crudOperation('clientes', 'update', data, loading, carregarClientes); // 'update' trata 'create' automaticamente
+                    }
+                    NOVON(); // Limpa o formulário após salvar
+                }
+
+                // Função para editar cliente
+                function editarCliente(cliente) {
+                    novoCliente.value = {
+                        cliente: cliente.cliente,
+                        nichos: cliente.nichos ? cliente.nichos.split(',') : [],
+                        situacoes: cliente.situacoes ? cliente.situacoes.split(',') : [],
+                        canais: cliente.canais ? cliente.canais.split(',') : [],
+                        status: cliente.status ? cliente.status.split(',') : []
+                    };
+                    clienteEditando = cliente.cliente; // Usa 'cliente' como identificador único
+                }
+
+                // Função para excluir cliente
+                async function excluirCliente(nome) {
+                    await crudOperation('clientes', 'delete', { cliente: nome }, loading, carregarClientes);
+                }
+
+                // Função de pesquisa
+                function Pesquisar() {
+                    // Filtragem feita pelo computed property
+                }
+
+                // Computed property para filtrar clientes
+                const filteredClientes = computed(() => {
+                    return filterList(clientes, searchTerm, 'cliente');
+                });
+
+                // Carregar dados ao montar o componente
+                onMounted(() => {
+                    carregarDados();
+                });
+
+                return {
+                    clientes,
+                    nichos,
+                    situacoes,
+                    canais,
+                    status,
+                    searchTerm,
+                    loading,
+                    novoCliente,
+                    NOVON,
+                    salvarCliente,
+                    editarCliente,
+                    excluirCliente,
+                    Pesquisar,
+                    filteredClientes
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

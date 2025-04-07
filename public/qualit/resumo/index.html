@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Atendimentos</title>
+	<link href="../img/icon.png" rel="shortcut icon" type="image/x-icon" >
+	<link href="../css/css.css" rel="stylesheet"    type="text/css">
+	<script src="../js/js.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        table {
+            width: 50%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        button {
+            margin: 5px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+		<img src="../img/logo.png" width="200" alt="Logo da Empresa">
+		<h2>Relatório de Atendimentos</h2>
+	
+    </header>
+
+    <footer>
+        <span id="dateTime"></span>
+    </footer>
+	<main>
+	<BR/>
+    <input type="text" id="Pesquisar" placeholder="🔎 Pesquisar..."  onkeyup="Pesquisar()"> <!--onblur onkeyup-->
+	<a href="javascript:window.history.back()"><button>VOLTAR 🔙</button></a>
+	
+    <label>Data Inicial: <input type="date" id="dataInicio" class="quadrado"></label>
+    <label>Data Final: <input type="date" id="dataFim" class="quadrado"></label>
+    <button onclick="gerarRelatorio()">Gerar Relatório</button>
+    <button onclick="exportarPDF()">Exportar para PDF</button>
+    
+    <div id="loader">
+		<img src="img/loading.gif" alt="Carregando...">
+	</div>
+	
+	<div id="relatorio">
+		<h3>Cliente: <span><script>document.write(cliente);</script></span></h3>
+		<h3>Total de Atendimentos: <span id="total">0</span> </h3>
+		<h3>Atendimentos por Canal</h3>
+		<div id="resultadoCanais"></div>
+		<h3>Atendimentos por Nicho</h3>
+		<div id="resultadoNichos"></div>
+		<h3>Atendimentos por Usuário</h3>
+		<div id="resultadoUsuarios"></div>
+		<h3>Atendimentos por Status</h3>
+		<div id="resultadoStatus"></div>
+	</div>
+
+    <script>
+        async function gerarRelatorio() {
+            const dataInicio = document.getElementById("dataInicio").value;
+            const dataFim = document.getElementById("dataFim").value;
+            if (!dataInicio || !dataFim) {
+                alert("Selecione um período válido!");
+                return;
+            }
+            
+            let query = `SELECT * FROM qualit WHERE cliente='${cliente}' AND data BETWEEN '${dataInicio}' AND '${dataFim}'`;
+            let url = `https://natalvalerio.pythonanywhere.com/api/sql?sql=${encodeURIComponent(query)}`;
+            
+			document.getElementById("loader").style.display = "flex"; 
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (!data || data.length === 0) {
+                    alert("Nenhum dado encontrado.");
+                    return;
+                }
+                
+                processarDados(data);
+            } catch (error) {
+                console.error("Erro ao buscar dados:", error);
+                alert("Erro ao buscar os dados.");
+            }
+			document.getElementById("loader").style.display = "none"; 
+			document.getElementById("relatorio").style.display = "grid"; 
+        }
+
+        function processarDados(dados) {
+            let totalAtendimentos = dados.length;
+            let canais = {};
+            let nichos = {};
+            let usuarios = {};
+            let status = {};
+            
+            dados.forEach(item => {
+                canais[item.canal] = (canais[item.canal] || 0) + 1;
+                nichos[item.nicho] = (nichos[item.nicho] || 0) + 1;
+                usuarios[item.usuario] = (usuarios[item.usuario] || 0) + 1;
+                status[item.status] = (status[item.status] || 0) + 1;
+            });
+            
+            document.getElementById("total").textContent = totalAtendimentos;
+            exibirTabela("resultadoCanais", canais, "Canal");
+            exibirTabela("resultadoNichos", nichos, "Nicho");
+            exibirTabela("resultadoUsuarios", usuarios, "Usuário");
+            exibirTabela("resultadoStatus", status, "Status");
+        }
+
+        function exibirTabela(id, obj, tipo) {
+            let html = `<table><tr><th>Tipo (${tipo})</th><th>Quantidade</th></tr>`;
+            for (let key in obj) {
+                html += `<tr><td>${key}</td><td>${obj[key]}</td></tr>`;
+            }
+            html += `</table>`;
+            document.getElementById(id).innerHTML = html;
+        }
+
+        function exportarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            let y = 10;
+
+		    // Verificar se a página está sendo carregada a partir de file:// (localmente)
+			if (window.location.protocol !== 'file:') {
+				//alert("O recurso de exportação para PDF não está disponível em ambientes locais (file://). Por favor, acesse o sistema através de um servidor.");
+				// Adicionar logo
+				const img = new Image();
+				img.src = "img/logo.png";
+				doc.addImage(img, 'PNG', 10, y, 50, 20);
+				y += 25;
+				//return;
+			}
+
+			// Título
+			const pageWidth = doc.internal.pageSize.width; // Largura da página
+			const title = "Relatório de Atendimentos";
+			const title2 = cliente
+			const textWidth  = doc.getTextWidth(title);
+			const textWidth2 = doc.getTextWidth(title2);
+			
+			const x  = (pageWidth - textWidth)  / 2; // Calcula a posição central
+			doc.text(title, x, y);
+			y += 10;
+			
+			const x2 = (pageWidth - textWidth2) / 2; // Calcula a posição central
+			doc.text(title2, x2, y);
+			
+			y += 10;
+
+            //doc.setFontSize(16);
+            //doc.text("Relatório de Atendimentos", 10, y);
+            //y += 10;
+
+            // Total de atendimentos
+			// Verificar o total de atendimentos antes de gerar o PDF
+			const total = document.getElementById("total").textContent;
+			if (total === "0") {
+				alert("Não há atendimentos para exportar.");
+				return;
+			} else {
+				doc.setFontSize(12);
+				doc.text(`Total de Atendimentos: ${total}`, 10, y);
+				y += 10;
+			}
+
+
+            // Seções para exportar
+            const sections = [
+                { title: "Atendimentos por Canal", id: "resultadoCanais" },
+                { title: "Atendimentos por Nicho", id: "resultadoNichos" },
+                { title: "Atendimentos por Usuário", id: "resultadoUsuarios" },
+                { title: "Atendimentos por Status", id: "resultadoStatus" }
+            ];
+
+            sections.forEach(section => {
+                y += 10;
+                doc.text(section.title, 10, y);
+                y += 10;
+
+                const table = document.getElementById(section.id).querySelector("table");
+                if (table) {
+                    const rows = Array.from(table.rows).map(row => 
+                        Array.from(row.cells).map(cell => cell.textContent)
+                    );
+                    doc.autoTable({
+                        startY: y,
+                        head: [rows[0]], // Cabeçalho
+                        body: rows.slice(1), // Dados
+                        theme: "grid",
+                        styles: { fontSize: 10 },
+                        headStyles: { fillColor: [200, 200, 200] },
+                        margin: { top: 10, left: 10 }
+                    });
+                    y = doc.lastAutoTable.finalY; // Atualiza a posição Y após cada tabela
+                } else {
+                    doc.text("Nenhum dado disponível", 10, y);
+                    y += 10;
+                }
+            });
+
+	
+			// Adicionar data e hora atual
+			y += 10;
+			const dataHoraAtual = new Date().toLocaleString();
+			doc.setFontSize(10);
+			doc.text(`Gerado em: ${dataHoraAtual}`, 10, y);
+
+            doc.save("relatorio_atendimentos.pdf");
+        }
+    </script>
+</body>
+</html>

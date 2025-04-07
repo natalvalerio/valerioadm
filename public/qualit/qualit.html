@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="img/icon.png" rel="shortcut icon" type="image/x-icon" >
+	<link href="css/css.css" rel="stylesheet"    type="text/css">
+	<script src="js/qualit.js"></script>
+	<script src="js/js.js"></script>
+    <title>Relatório Diário de Atendimento</title>
+</head>
+<body>
+    <header>
+		<img src="img/logo.png" width="200" alt="Logo da Empresa">
+		<h2>Relatório Diário de Atendimento</h2>
+    </header>
+
+    <footer>
+        <span id="dateTime"></span>
+    </footer>
+	<main>
+	<BR/>
+    <input type="text" id="Pesquisar" placeholder="🔎 Pesquisar..."  onkeyup="Pesquisar()"> <!--onblur onkeyup-->
+
+    <button onclick="NOVOQ()">NOVO ➕</button>
+    <!--button onclick="SALVARQ()">SALVAR ✅</button-->
+    <a onclick="sair();"><button>SAIR ↩️</button></a> <!--href="index.html" -->
+	
+
+<script>
+function sair() {
+    localStorage.clear();
+    //localStorage.setItem("gerarDump", "true");
+    window.location.href = ".";
+
+    // Checa a cada 1 segundo se o dump foi concluído
+    const checkDump = setInterval(() => {
+        if (localStorage.getItem("dumpConcluido") === "true") {
+            clearInterval(checkDump); // Para a verificação
+            localStorage.removeItem("dumpConcluido"); // Limpa o status
+            window.location.href = "index.html"; // Redireciona
+        }
+    }, 1000); // Verifica a cada 1 segundo
+}
+</script>
+
+
+
+
+
+    <script>
+        if (usuario === "PABLO") {
+            document.write('<a href="config.html"><button>CONFIG ⚙️</button></a>');
+            //document.write('<button onclick="alert(\'Configurações acessadas!\')">CONFIG ⚙️</button>');
+        }
+    </script>
+
+        <table>
+        <thead>
+            <tr>
+                <th>NOME</th>
+                <th>CIDADE</th>
+                <th>CONTATO</th>
+                <th>NICHO</th>
+                <th>SITUAÇÃO</th>
+                <th>DATA</th>
+                <th>HORA</th>
+                <th>CANAL</th>
+                <th>OBSERVAÇÕES</th>
+                <th>STATUS</th>
+                <th>AÇÕES</th>
+				<div id="loader">
+					<img src="img/loading.gif" alt="Carregando...">
+				</div>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+	</main>
+</body>
+</html>

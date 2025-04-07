@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Clientes</title>
+    <style>
+        .container { display: flex; gap: 20px; }
+        .column { flex: 1; }
+        table, th, td { border: 1px solid black; border-collapse: collapse; padding: 5px; }
+    </style>
+</head>
+<body>
+    <h2>Gerenciamento de Clientes</h2>
+    <input type="text" id="cliente" placeholder="Nome do Cliente">
+    <div class="container">
+        <div class="column" id="nichos"></div>
+        <div class="column" id="situacoes"></div>
+        <div class="column" id="canais"></div>
+        <div class="column" id="status"></div>
+    </div>
+    <button onclick="salvarCliente()">Salvar Cliente</button>
+    
+    <h3>Clientes Cadastrados</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Cliente</th><th>Nichos</th><th>Situações</th><th>Canais</th><th>Status</th><th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="clientes"></tbody>
+    </table>
+
+    <script>
+        async function fetchOptions(url, containerId, key) {
+            const response = await fetch(url);
+            const data = await response.json();
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<h4>${containerId.charAt(0).toUpperCase() + containerId.slice(1)}</h4>`;
+            data.forEach(item => {
+                const label = document.createElement("label");
+                label.innerHTML = `<input type='checkbox' value='${item[key]}'> ${item[key]}`;
+                container.appendChild(label);
+                container.appendChild(document.createElement("br"));
+            });
+        }
+
+        function getSelectedValues(containerId) {
+            return Array.from(document.querySelectorAll(`#${containerId} input:checked`))
+                .map(cb => cb.value)
+                .join(",");
+        }
+
+        async function salvarCliente() {
+            const cliente = document.getElementById("cliente").value;
+            const nichos = getSelectedValues("nichos");
+            const situacoes = getSelectedValues("situacoes");
+            const canais = getSelectedValues("canais");
+            const status = getSelectedValues("status");
+            const sql = `INSERT INTO clientes (cliente, nichos, situacoes, canais, status) VALUES ('${cliente}', '${nichos}', '${situacoes}', '${canais}', '${status}')`;
+            await fetch(`https://natalvalerio.pythonanywhere.com/api/sql?sql=${encodeURIComponent(sql)}`);
+            carregarClientes();
+        }
+
+        async function carregarClientes() {
+            const response = await fetch("https://natalvalerio.pythonanywhere.com/api/sql?sql=select * from clientes");
+            const clientes = await response.json();
+            const tbody = document.getElementById("clientes");
+            tbody.innerHTML = "";
+            clientes.forEach(cliente => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${cliente.cliente}</td>
+                    <td>${cliente.nichos}</td>
+                    <td>${cliente.situacoes}</td>
+                    <td>${cliente.canais}</td>
+                    <td>${cliente.status}</td>
+                    <td>
+                        <button onclick="editarCliente('${cliente.cliente}', '${cliente.nichos}', '${cliente.situacoes}', '${cliente.canais}', '${cliente.status}')">Editar</button>
+                        <button onclick="excluirCliente('${cliente.cliente}')">Excluir</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function excluirCliente(nome) {
+            const sql = `DELETE FROM clientes WHERE cliente='${nome}'`;
+            await fetch(`https://natalvalerio.pythonanywhere.com/api/sql?sql=${encodeURIComponent(sql)}`);
+            carregarClientes();
+        }
+
+        function editarCliente(nome, nichos, situacoes, canais, status) {
+            document.getElementById("cliente").value = nome;
+            marcarSelecionados("nichos", nichos);
+            marcarSelecionados("situacoes", situacoes);
+            marcarSelecionados("canais", canais);
+            marcarSelecionados("status", status);
+        }
+
+        function marcarSelecionados(containerId, valores) {
+            const valoresArray = valores.split(",");
+            document.querySelectorAll(`#${containerId} input`).forEach(cb => {
+                cb.checked = valoresArray.includes(cb.value);
+            });
+        }
+
+        fetchOptions("https://natalvalerio.pythonanywhere.com/api/select/nichos", "nichos", "nichos");
+        fetchOptions("https://natalvalerio.pythonanywhere.com/api/select/situacoes", "situacoes", "situacoes");
+        fetchOptions("https://natalvalerio.pythonanywhere.com/api/select/canais", "canais", "canais");
+        fetchOptions("https://natalvalerio.pythonanywhere.com/api/select/status", "status", "status");
+        carregarClientes();
+    </script>
+</body>
+</html>

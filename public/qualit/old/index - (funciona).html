@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="css/css.css" rel="stylesheet" type="text/css">
+    <link href="img/icon.png" rel="shortcut icon" type="image/x-icon">
+    <title>Login</title>
+    <script>
+        // Função para autenticar o usuário
+        async function loginUser(event) {
+            event.preventDefault(); // Impede o envio do formulário
+
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const clienteSelecionado = document.getElementById("cliente-select").value;
+
+            try {
+                const response = await fetch("https://natalvalerio.pythonanywhere.com/api/sql?sql=select usuario, senha from usuarios");
+                const data = await response.json();
+
+                // Verificação das credenciais
+                const user = data.find(user => user.usuario === username && user.senha === password);
+
+                if (user) {
+                    // Login bem-sucedido: salvar cliente no localStorage e redirecionar
+                    localStorage.setItem('cliente', clienteSelecionado);
+                    localStorage.setItem('usuario', username);
+                    window.location.href = "qualit.html";
+                } else {
+                    // Erro de autenticação
+                    document.getElementById("error-message").textContent = "Usuário ou senha incorretos!";
+                }
+            } catch (error) {
+                console.error("Erro na autenticação:", error);
+                document.getElementById("error-message").textContent = "Erro ao verificar as credenciais. Tente novamente!";
+            }
+        }
+
+        // Função para criar o select de clientes
+        function createSelectC(options, selectedValue = "") {
+            let select = document.createElement("select");
+            select.id = "cliente-select"; // Adiciona um ID para facilitar o acesso
+            options.forEach(option => {
+                let opt = document.createElement("option");
+                opt.value = option;
+                opt.textContent = option;
+                if (option === selectedValue) {
+                    opt.selected = true;
+                }
+                select.appendChild(opt);
+            });
+            return select;
+        }
+
+        // Função para carregar os clientes da API
+        async function carregarClientes() {
+            try {
+                const response = await fetch("https://natalvalerio.pythonanywhere.com/api/sql?sql=select cliente from clientes");
+                const data = await response.json();
+                const clientes = data.map(cliente => cliente.cliente); // Cria o array com os nomes dos clientes
+                const clientSelect = createSelectC(clientes);
+                document.getElementById("cliente").appendChild(clientSelect);
+            } catch (error) {
+                console.error("Erro ao carregar clientes:", error);
+                document.getElementById("error-message").textContent = "Erro ao carregar os clientes. Tente novamente!";
+            }
+        }
+
+        // Carregamento da página
+        window.onload = function() {
+            carregarClientes(); // Carrega os clientes assim que a página for carregada
+
+            // Agora o evento de login será tratado apenas pela função loginUser
+            document.getElementById("loginForm").addEventListener("submit", loginUser);
+        };
+    </script>
+</head>
+<body class="body_login">
+    <div class="login-container">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <div class="select_login" id="usuario">
+                <input class="input_login" type="text" id="username" placeholder="Usuário" required>
+            </div>
+            <input class="input_login" type="password" id="password" placeholder="Senha" required>
+
+            <div class="select_login" id="cliente"></div>
+
+            <button class="button_login" type="submit">LOGAR</button>
+            <div class="error" id="error-message"></div>
+        </form>
+    </div>
+</body>
+</html>

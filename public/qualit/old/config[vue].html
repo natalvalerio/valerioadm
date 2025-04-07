@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen">
+
+    <div id="app" class="w-full max-w-2xl p-6 bg-white rounded-lg shadow-md">
+        <!-- Cabeçalho -->
+        <header class="flex flex-col items-center mb-6">
+            <img src="img/logo.png" width="150" alt="Logo da Empresa">
+            <h2 class="text-2xl font-semibold text-gray-700 mt-2">CONFIGURAÇÕES</h2>
+        </header>
+
+        <!-- Botões de Navegação -->
+        <div class="flex justify-between mb-4">
+            <button @click="voltarPagina" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">🔙 VOLTAR</button>
+            <a href="index.html">
+                <button class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">↩️ SAIR</button>
+            </a>
+        </div>
+
+        <!-- Tabela de Configurações -->
+        <div class="bg-gray-200 p-4 rounded-md shadow">
+            <h3 class="text-lg font-semibold text-gray-700 mb-3">CONFIGURAÇÕES</h3>
+            <div class="grid grid-cols-2 gap-3">
+                <a v-for="(item, index) in configLinks" :key="index" :href="item.link">
+                    <button class="w-full p-2 bg-gray-300 hover:bg-gray-400 rounded-md text-gray-800 font-semibold">
+                        {{ item.label }}
+                    </button>
+                </a>
+                <button @click="exportarExcel" class="w-full p-2 bg-green-500 text-white rounded-md hover:bg-green-600">
+                    📊 EXCEL
+                </button>
+            </div>
+        </div>
+
+        <!-- Rodapé -->
+        <footer class="mt-6 text-center text-gray-600">
+            <span id="dateTime">{{ dateTime }}</span>
+        </footer>
+    </div>
+
+    <script>
+        const app = Vue.createApp({
+            data() {
+                return {
+                    dateTime: new Date().toLocaleString(),
+                    configLinks: [
+                        { label: "NICHOS", link: "nichos.html" },
+                        { label: "SITUAÇÕES", link: "situacoes.html" },
+                        { label: "CANAIS", link: "canais.html" },
+                        { label: "STATUS", link: "status.html" },
+                        { label: "USUÁRIOS", link: "usuarios.html" },
+                        { label: "CLIENTES", link: "clientes.html" },
+                        { label: "RELATÓRIO", link: "resumo.html" }
+                    ]
+                };
+            },
+            methods: {
+                voltarPagina() {
+                    window.history.back();
+                },
+                exportarExcel() {
+                    // Lógica para exportação Excel
+                    alert("Exportando para Excel...");
+                }
+            }
+        });
+
+        app.mount("#app");
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Clientes</title>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .form-container {
+            display: flex;
+            gap: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .table-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Gerenciamento de Clientes</h2>
+        <input type="hidden" id="cliente-id">
+        <input type="text" id="cliente" placeholder="Nome do Cliente">
+        <div class="form-container">
+            <div class="form-group" id="nichos-container"><strong>Nichos</strong></div>
+            <div class="form-group" id="situacoes-container"><strong>Situações</strong></div>
+            <div class="form-group" id="canais-container"><strong>Canais</strong></div>
+            <div class="form-group" id="status-container"><strong>Status</strong></div>
+        </div>
+        <button onclick="salvarCliente()">Salvar Cliente</button>
+    </div>
+    <div class="table-container">
+        <h2>Clientes Cadastrados</h2>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Nichos</th>
+                    <th>Situações</th>
+                    <th>Canais</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="clientes-lista"></tbody>
+        </table>
+    </div>
+    <script>
+        let apiUrl = "https://natalvalerio.pythonanywhere.com/api/select/";
+        let clienteEditando = null;
+
+        async function carregarOpcoes() {
+            const tipos = ["nichos", "situacoes", "canais", "status"];
+            for (const tipo of tipos) {
+                const response = await fetch(apiUrl + tipo);
+                const dados = await response.json();
+                const container = document.getElementById(`${tipo}-container`);
+                container.innerHTML = `<strong>${tipo.charAt(0).toUpperCase() + tipo.slice(1)}</strong>`;
+                dados.forEach(item => {
+                    const checkbox = document.createElement("input");
+                    checkbox.type = "checkbox";
+                    checkbox.value = item[tipo];
+                    checkbox.id = `${tipo}-${item[tipo]}`;
+                    const label = document.createElement("label");
+                    label.htmlFor = checkbox.id;
+                    label.innerText = item[tipo];
+                    container.appendChild(checkbox);
+                    container.appendChild(label);
+                    container.appendChild(document.createElement("br"));
+                });
+            }
+        }
+
+        async function carregarClientes() {
+            const response = await fetch("https://natalvalerio.pythonanywhere.com/api/sql?sql=select * from clientes");
+            const clientes = await response.json();
+            const lista = document.getElementById("clientes-lista");
+            lista.innerHTML = "";
+            clientes.forEach(cliente => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${cliente.cliente}</td>
+                    <td>${cliente.nichos}</td>
+                    <td>${cliente.situacoes}</td>
+                    <td>${cliente.canais}</td>
+                    <td>${cliente.status}</td>
+                    <td>
+                        <button onclick='editarCliente(${JSON.stringify(cliente)})'>Editar</button>
+                        <button onclick='excluirCliente("${cliente.cliente}")'>Excluir</button>
+                    </td>
+                `;
+                lista.appendChild(tr);
+            });
+        }
+
+        function editarCliente(cliente) {
+            document.getElementById("cliente-id").value = cliente.cliente;
+            document.getElementById("cliente").value = cliente.cliente;
+            ["nichos", "situacoes", "canais", "status"].forEach(tipo => {
+                document.querySelectorAll(`#${tipo}-container input[type=checkbox]`).forEach(checkbox => {
+                    checkbox.checked = cliente[tipo] && cliente[tipo].split(",").includes(checkbox.value);
+                });
+            });
+            clienteEditando = cliente;
+        }
+
+        async function excluirCliente(nome) {
+            const sql = `DELETE FROM clientes WHERE cliente='${nome}'`;
+            await fetch(`https://natalvalerio.pythonanywhere.com/api/sql?sql=${encodeURIComponent(sql)}`);
+            carregarClientes();
+        }
+
+        async function salvarCliente() {
+            const nome = document.getElementById("cliente").value;
+            if (!nome) return alert("Nome do cliente é obrigatório");
+            const valores = {};
+            ["nichos", "situacoes", "canais", "status"].forEach(tipo => {
+                valores[tipo] = Array.from(document.querySelectorAll(`#${tipo}-container input[type=checkbox]:checked`))
+                    .map(checkbox => checkbox.value).join(",");
+            });
+            let sql;
+            if (clienteEditando) {
+                sql = `UPDATE clientes SET nichos='${valores.nichos}', situacoes='${valores.situacoes}', canais='${valores.canais}', status='${valores.status}' WHERE cliente='${clienteEditando.cliente}'`;
+                clienteEditando = null;
+            } else {
+                sql = `INSERT INTO clientes (cliente, nichos, situacoes, canais, status) VALUES ('${nome}', '${valores.nichos}', '${valores.situacoes}', '${valores.canais}', '${valores.status}')`;
+            }
+            await fetch(`https://natalvalerio.pythonanywhere.com/api/sql?sql=${encodeURIComponent(sql)}`);
+            document.getElementById("cliente-id").value = "";
+            document.getElementById("cliente").value = "";
+            document.querySelectorAll("input[type=checkbox]").forEach(checkbox => checkbox.checked = false);
+            carregarClientes();
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            carregarOpcoes();
+            carregarClientes();
+        });
+    </script>
+</body>
+</html>

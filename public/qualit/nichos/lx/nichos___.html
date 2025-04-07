@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="img/icon.png" rel="shortcut icon" type="image/x-icon">
+    <link href="css/css.css" rel="stylesheet" type="text/css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="js/js.js"></script>
+    <title>NICHOS</title>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <img src="img/logo.png" width="200" alt="Logo da Empresa">
+            <h2>NICHOS</h2>
+        </header>
+
+        <footer>
+            <span id="dateTime"></span>
+        </footer>
+
+        <main>
+            <br/>
+            <input 
+                type="text" 
+                id="Pesquisar" 
+                placeholder="🔎 Pesquisar..." 
+                v-model="searchTerm" 
+                @keyup="Pesquisar"
+            >
+            <button @click="NOVON">NOVO ➕</button>
+            <a href="javascript:window.history.back()">
+                <button>VOLTAR 🔙</button>
+            </a>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>NICHOS</th>
+                        <th>AÇÕES</th>
+                        <div id="loader" v-show="loading">
+                            <img src="img/loading.gif" alt="Carregando...">
+                        </div>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="item in filteredNichos" :key="item.id" :data-id="item.id">
+                        <td>
+                            <input v-model="item.nichos">
+                        </td>
+                        <td>
+                            <span @click="ATUALIZARN(item)">✅</span>
+                            <span @click="EXCLUIRN(item)">❌</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </main>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                const nichos = ref([]);
+                const searchTerm = ref('');
+                const loading = ref(false);
+
+                // Função para buscar dados
+                async function fetchDataN() {
+                    loading.value = true;
+                    try {
+                        let query = `select * from nichos`;
+                        let response = await fetch(`${api}${query}`);
+                        let data = await response.json();
+                        nichos.value = data;
+                    } catch (error) {
+                        console.error("Erro ao buscar dados: ", error);
+                    }
+                    loading.value = false;
+                }
+
+                // Função para adicionar novo nicho
+                function NOVON() {
+                    nichos.value.unshift({ id: '', nichos: '' });
+                }
+
+                // Função para salvar novo nicho
+                async function SALVARN(item) {
+                    let data = { nichos: item.nichos };
+                    let sqlQuery = `insert into nichos (nichos) values ('${data.nichos}')`;
+                    let encodedQuery = encodeURIComponent(sqlQuery);
+
+                    try {
+                        let response = await fetch(`${api}${encodedQuery}`, {
+                            method: "GET",
+                            headers: { "Content-Type": "application/json" }
+                        });
+                        if (!response.ok) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Erro',
+                                text: 'Erro ao salvar dados!',
+                                confirmButtonColor: '#A1A1D6'
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Sucesso',
+                                text: 'Dados salvos com sucesso!',
+                                confirmButtonColor: '#A1A1D6'
+                            });
+                            await fetchDataN();
+                        }
+                    } catch (error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erro',
+                            text: 'Erro ao salvar dados.',
+                            confirmButtonColor: '#A1A1D6'
+                        });
+                        console.error("Erro ao salvar dados: ", error);
+                    }
+                }
+
+                // Função para atualizar nicho
+                async function ATUALIZARN(item) {
+                    if (!item.id) {
+                        await SALVARN(item);
+                        return;
+                    }
+
+                    let sqlQuery = `update nichos set nichos='${item.nichos}' where id=${item.id}`;
+                    let encodedQuery = encodeURIComponent(sqlQuery);
+
+                    try {
+                        let response = await fetch(`${api}${encodedQuery}`, {
+                            method: "GET",
+                            headers: { "Content-Type": "application/json" }
+                        });
+                        if (!response.ok) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Erro',
+                                text: 'Erro ao atualizar dados!',
+                                confirmButtonColor: '#A1A1D6'
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Sucesso',
+                                text: 'Dados atualizados com sucesso!',
+                                confirmButtonColor: '#A1A1D6'
+                            });
+                            await fetchDataN();
+                        }
+                    } catch (error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erro',
+                            text: 'Erro ao atualizar dados.',
+                            confirmButtonColor: '#A1A1D6'
+                        });
+                        console.error("Erro ao atualizar dados: ", error);
+                    }
+                }
+
+                // Função para excluir nicho
+                async function EXCLUIRN(item) {
+                    if (!item.id) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Atenção',
+                            text: 'Não é possível excluir uma linha sem ID.',
+                            confirmButtonColor: '#A1A1D6'
+                        });
+                        return;
+                    }
+
+                    let sqlQuery = `delete from nichos where id=${item.id}`;
+                    let encodedQuery = encodeURIComponent(sqlQuery);
+
+                    Swal.fire({
+                        title: 'Confirmação',
+                        text: 'Tem certeza de que deseja excluir esta linha?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#A1A1D6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Sim, excluir',
+                        cancelButtonText: 'Cancelar'
+                    }).then(async (result) => {
+                        if (result.isConfirmed) {
+                            try {
+                                let response = await fetch(`${api}${encodedQuery}`, {
+                                    method: "GET",
+                                    headers: { "Content-Type": "application/json" }
+                                });
+                                if (!response.ok) {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Erro',
+                                        text: 'Erro ao excluir dados!',
+                                        confirmButtonColor: '#A1A1D6'
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Sucesso',
+                                        text: 'Dados excluídos com sucesso!',
+                                        confirmButtonColor: '#A1A1D6'
+                                    });
+                                    await fetchDataN();
+                                }
+                            } catch (error) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Erro',
+                                    text: 'Erro ao excluir dados.',
+                                    confirmButtonColor: '#A1A1D6'
+                                });
+                                console.error("Erro ao excluir dados: ", error);
+                            }
+                        }
+                    });
+                }
+
+                // Função de pesquisa
+                function Pesquisar() {
+                    // A filtragem será feita pelo computed property
+                }
+
+                // Computed property para filtrar nichos
+                const filteredNichos = computed(() => {
+                    const term = searchTerm.value.toLowerCase();
+                    return nichos.value.filter(item => 
+                        item.nichos.toLowerCase().includes(term)
+                    );
+                });
+
+                // Carregar dados ao montar o componente
+                onMounted(() => {
+                    fetchDataN();
+                });
+
+                return {
+                    nichos,
+                    searchTerm,
+                    loading,
+                    NOVON,
+                    ATUALIZARN,
+                    EXCLUIRN,
+                    Pesquisar,
+                    filteredNichos
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

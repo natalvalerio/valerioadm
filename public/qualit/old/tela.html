@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Tabela</title>
+	<style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #FFCC00;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            z-index: 1000;
+        }
+
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #FFCC00;
+            color: white;
+            text-align: center;
+            padding: 10px;
+        }
+
+        main {
+            margin-top: 120px;
+            margin-bottom: 60px;
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th {
+            background-color: #393996;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        #searchBar {
+            padding: 8px;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #FFCC00;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background-color: #393996;
+        }
+
+    </style> 
+</head>
+<body>
+    <header>
+        <h1>Gerenciamento de Tabela</h1>
+    </header>
+
+    <footer>
+        <span id="dateTime"></span>
+    </footer>
+
+    <main>
+        <div class="controls">
+            <input type="text" id="searchBar" placeholder="Pesquisar..." onkeyup="searchTable()">
+            <button onclick="addRow()">NOVO</button>
+            <button onclick="saveRow()">SALVAR</button>
+            <button onclick="updateRow()">ATUALIZAR</button>
+            <button onclick="deleteRow()">EXCLUIR</button>
+        </div>
+
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Idade</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Linhas dinâmicas serão adicionadas aqui -->
+            </tbody>
+        </table>
+    </main>
+
+    <script>
+        function updateDateTime() {
+            const now = new Date();
+            const dateTimeString = now.toLocaleString();
+            document.getElementById("dateTime").textContent = dateTimeString;
+        }
+
+        setInterval(updateDateTime, 1000);
+
+        function addRow() {
+            const table = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
+            const newRow = table.insertRow();
+
+            newRow.insertCell(0).textContent = "";
+            newRow.insertCell(1).innerHTML = `<input type="text" placeholder="Nome">`;
+            newRow.insertCell(2).innerHTML = `<input type="number" placeholder="Idade">`;
+            newRow.insertCell(3).innerHTML = `<button onclick="saveRow(this)">Salvar</button>`;
+        }
+
+        function saveRow(button) {
+            const row = button.parentElement.parentElement;
+            const cells = row.getElementsByTagName("td");
+
+            cells[0].textContent = Date.now(); // ID único (timestamp)
+            cells[1].textContent = cells[1].querySelector("input").value;
+            cells[2].textContent = cells[2].querySelector("input").value;
+            cells[3].innerHTML = `<button onclick="editRow(this)">Editar</button> <button onclick="deleteRow(this)">Excluir</button>`;
+        }
+
+        function editRow(button) {
+            const row = button.parentElement.parentElement;
+            const cells = row.getElementsByTagName("td");
+
+            cells[1].innerHTML = `<input type="text" value="${cells[1].textContent}">`;
+            cells[2].innerHTML = `<input type="number" value="${cells[2].textContent}">`;
+            cells[3].innerHTML = `<button onclick="saveRow(this)">Salvar</button>`;
+        }
+
+        function deleteRow(button) {
+            const row = button.parentElement.parentElement;
+            row.remove();
+        }
+
+        function searchTable() {
+            const filter = document.getElementById("searchBar").value.toUpperCase();
+            const table = document.getElementById("dataTable");
+            const rows = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < rows.length; i++) {
+                const cells = rows[i].getElementsByTagName("td");
+                let match = false;
+
+                for (let j = 0; j < cells.length; j++) {
+                    if (cells[j] && cells[j].textContent.toUpperCase().indexOf(filter) > -1) {
+                        match = true;
+                        break;
+                    }
+                }
+
+                rows[i].style.display = match ? "" : "none";
+            }
+        }
+    </script>
+</body>
+</html>

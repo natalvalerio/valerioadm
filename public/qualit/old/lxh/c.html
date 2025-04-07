@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Atendimentos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        table { width: 60%; margin: auto; border-collapse: collapse; }
+        th, td { border: 1px solid black; padding: 8px; text-align: center; }
+        th { background-color: #ddd; }
+        .total { font-weight: bold; color: red; }
+    </style>
+</head>
+<body>
+    <h2>Relatório Detalhado</h2>
+    <table id="tabela-relatorio">
+        <thead>
+            <tr>
+                <th>TIPO</th>
+                <th>QT.</th>
+            </tr>
+        </thead>
+        <tbody id="relatorio-body">
+            <!-- Dados serão inseridos aqui -->
+        </tbody>
+    </table>
+    <br>
+    <button onclick="exportarPDF()">Exportar para PDF</button>
+
+    <script>
+        // Dados simulados (depois substituímos pela API)
+        const dados = [
+            { tipo: "CHAT", qtd: 821 },
+            { tipo: "CHAMADA DE VOZ", qtd: 1027 },
+            { tipo: "CONTATOS DE CORTEZIA", qtd: 871 },
+            { tipo: "SITUAÇÃO (ATENDIMENTO)", qtd: 249 },
+            { tipo: "SITUAÇÃO (PROSPECÇÃO)", qtd: 1599 },
+            { tipo: "NICHO (FARMÁCIA)", qtd: 1131 },
+            { tipo: "NICHO (MERCADO)", qtd: 468 },
+            { tipo: "CHAMADAS SEM INTERAÇÃO", qtd: 536 },
+            { tipo: "CONTATOS EFETIVOS", qtd: 1063 }
+        ];
+
+        function carregarTabela() {
+            const tbody = document.getElementById("relatorio-body");
+            tbody.innerHTML = "";
+            let total = 0;
+            dados.forEach(dado => {
+                total += dado.qtd;
+                tbody.innerHTML += `<tr><td>${dado.tipo}</td><td>${dado.qtd}</td></tr>`;
+            });
+            tbody.innerHTML += `<tr class='total'><td>TOTAL DE INTERAÇÕES</td><td>${total}</td></tr>`;
+        }
+        
+        function exportarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            html2canvas(document.getElementById("tabela-relatorio")).then(canvas => {
+                const imgData = canvas.toDataURL("image/png");
+                doc.addImage(imgData, "PNG", 10, 10, 180, 0);
+                doc.save("relatorio.pdf");
+            });
+        }
+
+        carregarTabela();
+    </script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="img/icon.png" rel="shortcut icon" type="image/x-icon" >
+	<link href="css/css.css" rel="stylesheet"    type="text/css">
+	<script src="js/js.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <title>CONFIGURAÇÕES</title>
+</head>
+<body>
+    <header>
+		<img src="img/logo.png" width="200" alt="Logo da Empresa">
+		<h2>CONFIGURAÇÕES</h2>
+		
+	<script>
+	function sair1() {
+		localStorage.clear();
+		window.location.href = ".";
+	}	
+	
+	function backup() {
+		localStorage.setItem("gerarDump", "true");
+		window.location.href = "dump.html"; 
+ 
+		// Checa a cada 1 segundo se o dump foi concluído
+		const checkDump = setInterval(() => {
+        if (localStorage.getItem("dumpConcluido") === "true") {
+            clearInterval(checkDump); // Para a verificação
+            localStorage.removeItem("dumpConcluido"); // Limpa o status
+            window.location.href = "config.html"; // Redireciona
+        }
+    }, 1000); // Verifica a cada 1 segundo
+	}
+	</script>	
+    </header>
+
+    <footer>
+        <span id="dateTime"></span>
+    </footer>
+	<main>
+	<BR/>
+    <a href="javascript:window.history.back()"><button>VOLTAR 🔙</button></a>
+    <!--a href="index.html"><button>SAIR ↩️</button></a-->
+	<a onclick="sair1();"><button>SAIR ↩️</button></a>
+
+	<table>
+		<thead>
+			<tr>
+				<th>CONFIGURAÇÕES</th>
+			</tr>
+			<tr>
+				<td>
+					<a href="nichos">   <button>NICHOS   </button></a>
+					<a href="situacoes"><button>SITUAÇÕES</button></a>
+					<a href="canais">   <button>CANAIS   </button></a>
+					<a href="status">   <button>STATUS   </button></a>
+					<a href="usuarios"> <button>USUÁRIOS </button></a>
+					<a href="clientes"> <button>CLIENTES </button></a>
+					<a href="resumo">   <button>RELATÓRIO </button></a>
+					<button onclick="Excel()">EXCEL </button>
+					<button onclick="backup()">BACKUP</button></a>
+				</td>
+			</tr>
+		</thead>
+	</table>
+	
+    <tbody>
+    </tbody>
+    </table>
+	</main>
+</body>
+</html>

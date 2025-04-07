@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="../img/icon.png" rel="shortcut icon" type="image/x-icon">
+    <link href="../css/css.css" rel="stylesheet" type="text/css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../js/js.js"></script>
+    <title>USUÁRIOS</title>
+    <style>
+        .container { display: flex; gap: 20px; }
+        .column { flex: 1; }
+        table, th, td { border: 1px solid black; border-collapse: collapse; padding: 5px; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <img src="../img/logo.png" width="200" alt="Logo da Empresa">
+            <h2>USUÁRIOS</h2>
+        </header>
+
+        <footer>
+            <span id="dateTime"></span>
+        </footer>
+
+        <main>
+            <br/>
+            <input 
+                type="text" 
+                id="Pesquisar" 
+                placeholder="🔎 Pesquisar..." 
+                v-model="searchTerm" 
+                @keyup="Pesquisar"
+            >
+            <button @click="NOVON">NOVO ➕</button>
+            <a href="javascript:window.history.back()">
+                <button>VOLTAR 🔙</button>
+            </a>
+
+            <br><br>
+            Nome do Usuário: 
+            <input 
+                type="text" 
+                id="usuario" 
+                placeholder="Nome do Usuário" 
+                class="input_login" 
+                v-model="novoUsuario.usuario"
+            >
+            Senha: 
+            <input 
+                type="password" 
+                id="senha" 
+                placeholder="Senha" 
+                class="input_login" 
+                v-model="novoUsuario.senha"
+            >
+
+            <h3>Selecione os Clientes</h3>
+            <div class="column">
+                <label v-for="cliente in clientes" :key="cliente.cliente">
+                    <input type="checkbox" :value="cliente.cliente" v-model="novoUsuario.clientes"> {{ cliente.cliente }}<br>
+                </label>
+            </div>
+
+            <button @click="salvarUsuario">Salvar Usuário</button>
+
+            <h3>Usuários Cadastrados</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Usuário</th>
+                        <th>Senha</th>
+                        <th>Clientes</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="usuario in filteredUsuarios" :key="usuario.usuario">
+                        <td>{{ usuario.usuario }}</td>
+                        <td>{{ usuario.senha }}</td>
+                        <td>{{ usuario.clientes }}</td>
+                        <td>
+                            <button @click="editarUsuario(usuario)">Editar</button>
+                            <button @click="excluirUsuario(usuario.usuario)">Excluir</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <transition name="fade">
+                <div v-if="loading" class="loader-overlay">
+                    <img src="../img/loading.gif" alt="Carregando...">
+                </div>
+            </transition>
+        </main>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                const usuarios = ref([]);
+                const clientes = ref([]);
+                const searchTerm = ref('');
+                const loading = ref(false);
+                const novoUsuario = ref({
+                    usuario: '',
+                    senha: '',
+                    clientes: []
+                });
+                let usuarioEditando = null;
+
+                // Função específica para fetch com loading
+                async function fetchAPI(sqlQuery) {
+                    loading.value = true;
+                    try {
+                        const encodedQuery = encodeURIComponent(sqlQuery);
+                        console.log("Query enviada:", sqlQuery); // Log para depuração
+                        const response = await fetch(`https://natalvalerio.pythonanywhere.com/api/sql?sql=${encodedQuery}`, {
+                            method: "GET",
+                            headers: { "Content-Type": "application/json" }
+                        });
+                        if (!response.ok) throw new Error('Erro na requisição');
+                        return await response.json();
+                    } catch (error) {
+                        console.error("Erro na API:", error);
+                        throw error;
+                    } finally {
+                        loading.value = false;
+                    }
+                }
+
+                // Função para carregar clientes
+                async function carregarClientes() {
+                    const data = await fetchAPI('select cliente from clientes');
+                    if (data) clientes.value = data;
+                }
+
+                // Função para carregar usuários
+                async function carregarUsuarios() {
+                    const data = await fetchAPI('select * from user');
+                    if (data) usuarios.value = data;
+                }
+
+                // Função para carregar todos os dados
+                async function carregarDados() {
+                    await carregarClientes();
+                    await carregarUsuarios();
+                }
+
+                // Função para adicionar novo usuário (limpar formulário)
+                function NOVON() {
+                    console.log("Resetando formulário..."); // Log para depuração
+                    novoUsuario.value = {
+                        usuario: '',
+                        senha: '',
+                        clientes: []
+                    };
+                    usuarioEditando = null;
+                }
+
+                // Função para salvar usuário
+                async function salvarUsuario() {
+                    if (!novoUsuario.value.usuario || !novoUsuario.value.senha || novoUsuario.value.clientes.length === 0) {
+                        showWarning('Todos os campos são obrigatórios');
+                        return;
+                    }
+
+                    const data = {
+                        usuario: novoUsuario.value.usuario,
+                        senha: novoUsuario.value.senha,
+                        clientes: novoUsuario.value.clientes.join(',')
+                    };
+
+                    let sqlQuery;
+                    if (usuarioEditando) {
+                        sqlQuery = `UPDATE user SET usuario='${data.usuario}', senha='${data.senha}', clientes='${data.clientes}' WHERE usuario='${usuarioEditando}'`;
+                        await fetchAPI(sqlQuery);
+                        showSuccess('Dados atualizados com sucesso!');
+                    } else {
+                        sqlQuery = `INSERT INTO user (usuario, senha, clientes) VALUES ('${data.usuario}', '${data.senha}', '${data.clientes}')`;
+                        await fetchAPI(sqlQuery);
+                        showSuccess('Dados salvos com sucesso!');
+                    }
+                    NOVON(); // Limpa o formulário após salvar
+                    await carregarUsuarios();
+                }
+
+                // Função para editar usuário
+                function editarUsuario(usuario) {
+                    console.log("Editando usuário:", usuario); // Log para depuração
+                    novoUsuario.value = {
+                        usuario: usuario.usuario,
+                        senha: usuario.senha,
+                        clientes: usuario.clientes ? usuario.clientes.split(',') : []
+                    };
+                    usuarioEditando = usuario.usuario;
+                }
+
+                // Função para excluir usuário
+                async function excluirUsuario(nome) {
+                    const confirmed = await confirmAction(`Tem certeza que deseja excluir o usuário "${nome}"?`);
+                    if (confirmed) {
+                        const sqlQuery = `DELETE FROM user WHERE usuario='${nome}'`;
+                        await fetchAPI(sqlQuery);
+                        showSuccess('Usuário excluído com sucesso!');
+                        await carregarUsuarios();
+                    }
+                }
+
+                // Função de pesquisa
+                function Pesquisar() {
+                    // Filtragem feita pelo computed property
+                }
+
+                // Computed property para filtrar usuários
+                const filteredUsuarios = computed(() => {
+                    return filterList(usuarios, searchTerm, 'usuario');
+                });
+
+                // Carregar dados ao montar o componente
+                onMounted(() => {
+                    carregarDados();
+                });
+
+                return {
+                    usuarios,
+                    clientes,
+                    searchTerm,
+                    loading,
+                    novoUsuario,
+                    NOVON,
+                    salvarUsuario,
+                    editarUsuario,
+                    excluirUsuario,
+                    Pesquisar,
+                    filteredUsuarios
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

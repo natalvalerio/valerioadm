@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Atendimentos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        table {
+            width: 50%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        button {
+            margin: 5px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Relatório de Atendimentos</h2>
+    <label>Data Inicial: <input type="date" id="dataInicio"></label>
+    <label>Data Final: <input type="date" id="dataFim"></label>
+    <button onclick="gerarRelatorio()">Gerar Relatório</button>
+    <button onclick="exportarPDF()">Exportar para PDF</button>
+    
+    <h3>Total de Atendimentos: <span id="total">0</span></h3>
+    <h3>Atendimentos por Canal</h3>
+    <div id="resultadoCanais"></div>
+    <h3>Atendimentos por Nicho</h3>
+    <div id="resultadoNichos"></div>
+    <h3>Atendimentos por Usuário</h3>
+    <div id="resultadoUsuarios"></div>
+    <h3>Atendimentos por Status</h3>
+    <div id="resultadoStatus"></div>
+
+    <script>
+        async function gerarRelatorio() {
+            const dataInicio = document.getElementById("dataInicio").value;
+            const dataFim = document.getElementById("dataFim").value;
+            if (!dataInicio || !dataFim) {
+                alert("Selecione um período válido!");
+                return;
+            }
+            
+            let query = `SELECT * FROM qualit WHERE data BETWEEN '${dataInicio}' AND '${dataFim}'`;
+            let url = `https://natalvalerio.pythonanywhere.com/api/sql?sql=${encodeURIComponent(query)}`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (!data || data.length === 0) {
+                    alert("Nenhum dado encontrado.");
+                    return;
+                }
+                
+                processarDados(data);
+            } catch (error) {
+                console.error("Erro ao buscar dados:", error);
+                alert("Erro ao buscar os dados.");
+            }
+        }
+
+        function processarDados(dados) {
+            let totalAtendimentos = dados.length;
+            let canais = {};
+            let nichos = {};
+            let usuarios = {};
+            let status = {};
+            
+            dados.forEach(item => {
+                canais[item.canal] = (canais[item.canal] || 0) + 1;
+                nichos[item.nicho] = (nichos[item.nicho] || 0) + 1;
+                usuarios[item.usuario] = (usuarios[item.usuario] || 0) + 1;
+                status[item.status] = (status[item.status] || 0) + 1;
+            });
+            
+            document.getElementById("total").textContent = totalAtendimentos;
+            exibirTabela("resultadoCanais", canais, "Canal");
+            exibirTabela("resultadoNichos", nichos, "Nicho");
+            exibirTabela("resultadoUsuarios", usuarios, "Usuário");
+            exibirTabela("resultadoStatus", status, "Status");
+        }
+
+        function exibirTabela(id, obj, tipo) {
+            let html = `<table><tr><th>Tipo (${tipo})</th><th>Quantidade</th></tr>`;
+            for (let key in obj) {
+                html += `<tr><td>${key}</td><td>${obj[key]}</td></tr>`;
+            }
+            html += `</table>`;
+            document.getElementById(id).innerHTML = html;
+        }
+
+        function exportarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            let y = 10;
+
+            doc.setFontSize(16);
+            doc.text("Relatório de Atendimentos", 10, y);
+            y += 10;
+
+            doc.setFontSize(12);
+            const total = document.getElementById("total").textContent;
+            doc.text(`Total de Atendimentos: ${total}`, 10, y);
+            y += 10;
+
+            const sections = [
+                { title: "Atendimentos por Canal", id: "resultadoCanais" },
+                { title: "Atendimentos por Nicho", id: "resultadoNichos" },
+                { title: "Atendimentos por Usuário", id: "resultadoUsuarios" },
+                { title: "Atendimentos por Status", id: "resultadoStatus" }
+            ];
+
+            sections.forEach(section => {
+                y += 10;
+                doc.text(section.title, 10, y);
+                y += 10;
+
+                const table = document.getElementById(section.id).querySelector("table");
+                if (table) {
+                    const rows = Array.from(table.rows).map(row => 
+                        Array.from(row.cells).map(cell => cell.textContent)
+                    );
+                    doc.autoTable({
+                        startY: y,
+                        head: [rows[0]],
+                        body: rows.slice(1),
+                        theme: "grid",
+                        styles: { fontSize: 10 }
+                    });
+                    y = doc.lastAutoTable.finalY;
+                }
+            });
+
+            doc.save("relatorio_atendimentos.pdf");
+        }
+    </script>
+</body>
+</html>

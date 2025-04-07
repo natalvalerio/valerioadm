@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="../img/icon.png" rel="shortcut icon" type="image/x-icon">
+    <link href="../css/css.css" rel="stylesheet" type="text/css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../js/js.js"></script>
+    <title>STATUS</title>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <img src="../img/logo.png" width="200" alt="Logo da Empresa">
+            <h2>STATUS</h2>
+        </header>
+
+        <footer>
+            <span id="dateTime"></span>
+        </footer>
+
+        <main>
+            <br/>
+            <input 
+                type="text" 
+                id="Pesquisar" 
+                placeholder="🔎 Pesquisar..." 
+                v-model="searchTerm" 
+                @keyup="Pesquisar"
+            >
+            <button @click="NOVON">NOVO ➕</button>
+            <a href="javascript:window.history.back()">
+                <button>VOLTAR 🔙</button>
+            </a>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>STATUS</th>
+                        <th>AÇÕES</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="item in filteredStatus" :key="item.id" :data-id="item.id">
+                        <td>
+                            <input v-model="item.status">
+                        </td>
+                        <td>
+                            <span class="action-btn save" @click="ATUALIZARN(item)">Gravar ✅</span>
+                            <span class="action-btn delete" @click="EXCLUIRN(item)">Excluir ❌</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </main>
+
+        <transition name="fade">
+            <div v-if="loading" class="loader-overlay">
+                <img src="../img/loading.gif" alt="Carregando...">
+            </div>
+        </transition>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                const status = ref([]);
+                const searchTerm = ref('');
+                const loading = ref(false);
+
+                // Função para buscar dados (refresh)
+                async function fetchDataN() {
+                    const data = await crudOperation('status', 'read', {}, loading);
+                    if (data) status.value = data;
+                }
+
+                // Função para adicionar novo status
+                function NOVON() {
+                    addNewItem(status, { id: '', status: '' });
+                }
+
+                // Função para atualizar ou salvar status
+                async function ATUALIZARN(item) {
+                    await crudOperation('status', 'update', item, loading, fetchDataN);
+                }
+
+                // Função para excluir status
+                async function EXCLUIRN(item) {
+                    await crudOperation('status', 'delete', item, loading, fetchDataN);
+                }
+
+                // Função de pesquisa
+                function Pesquisar() {
+                    // A filtragem será feita pelo computed property
+                }
+
+                // Computed property para filtrar status
+                const filteredStatus = computed(() => {
+                    return filterList(status, searchTerm, 'status');
+                });
+
+                // Carregar dados ao montar o componente
+                onMounted(() => {
+                    fetchDataN();
+                });
+
+                return {
+                    status,
+                    searchTerm,
+                    loading,
+                    NOVON,
+                    ATUALIZARN,
+                    EXCLUIRN,
+                    Pesquisar,
+                    filteredStatus
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

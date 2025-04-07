@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="img/icon.png" rel="shortcut icon" type="image/x-icon">
+    <link href="css/css.css" rel="stylesheet" type="text/css">
+    <script src="js/js.js"></script>
+    <title>USUÁRIOS</title>
+    <style>
+        .container { display: flex; gap: 20px; }
+        .column { flex: 1; }
+        table, th, td { border: 1px solid black; border-collapse: collapse; padding: 5px; }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="img/logo.png" width="200" alt="Logo da Empresa">
+        <h2>USUÁRIOS</h2>
+    </header>
+
+    <footer>
+        <span id="dateTime"></span>
+    </footer>
+
+    <main>
+        <BR/>
+        <input type="text" id="Pesquisar" placeholder="🔎 Pesquisar..." onkeyup="Pesquisar()">
+        <a href="javascript:window.history.back()"><button>VOLTAR 🔙</button></a>
+
+        <div id="loader">
+            <img src="img/loading.gif" alt="Carregando...">
+        </div>
+        <BR><BR>
+
+        Nome do Usuário: <input type="text" id="usuario" placeholder="Nome do Usuário" class="input_login">
+        Senha: <input type="password" id="senha" placeholder="Senha" class="input_login">
+        Clientes: <input type="text" id="clientes" placeholder="Clientes (separados por vírgula)" class="input_login">
+
+        <button onclick="salvarUsuario()">Salvar Usuário</button>
+
+        <h3>Usuários Cadastrados</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Usuário</th>
+                    <th>Senha</th>
+                    <th>Clientes</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="usuarios"></tbody>
+        </table>
+
+        <script>
+            let usuarioEditando = null; // Variável para controlar a edição
+
+            async function salvarUsuario() {
+                const nome = document.getElementById("usuario").value;
+                const senha = document.getElementById("senha").value;
+                const clientes = document.getElementById("clientes").value;
+
+                if (!nome || !senha || !clientes) return alert("Todos os campos são obrigatórios");
+
+                let sql;
+                if (usuarioEditando) { // Se estamos editando
+                    sql = `UPDATE user SET usuario='${nome}', senha='${senha}', clientes='${clientes}' WHERE usuario='${usuarioEditando}'`;
+                    usuarioEditando = null; // Limpa após edição
+                } else { // Se estamos adicionando
+                    sql = `INSERT INTO user (usuario, senha, clientes) VALUES ('${nome}', '${senha}', '${clientes}')`;
+                }
+
+                await fetch(`https://natalvalerio.pythonanywhere.com/api/sql?sql=${encodeURIComponent(sql)}`);
+                document.getElementById("usuario").value = ""; // Limpa o campo do nome
+                document.getElementById("senha").value = ""; // Limpa o campo da senha
+                document.getElementById("clientes").value = ""; // Limpa o campo dos clientes
+                carregarUsuarios();
+            }
+
+            async function carregarUsuarios() {
+                document.getElementById("loader").style.display = "flex";
+                const response = await fetch("https://natalvalerio.pythonanywhere.com/api/sql?sql=select * from user");
+                const usuarios = await response.json();
+                const tbody = document.getElementById("usuarios");
+                tbody.innerHTML = "";
+                usuarios.forEach(usuario => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${usuario.usuario}</td>
+                        <td>${usuario.senha}</td>
+                        <td>${usuario.clientes}</td>
+                        <td>
+                            <button onclick="editarUsuario('${usuario.usuario}', '${usuario.senha}', '${usuario.clientes}')">Editar</button>
+                            <button onclick="excluirUsuario('${usuario.usuario}')">Excluir</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                document.getElementById("loader").style.display = "none";
+            }
+
+            async function excluirUsuario(nome) {
+                const confirmar = confirm(`Tem certeza que deseja excluir o usuário "${nome}"?`);
+                if (confirmar) {
+                    const sql = `DELETE FROM user WHERE usuario='${nome}'`;
+                    await fetch(`https://natalvalerio.pythonanywhere.com/api/sql?sql=${encodeURIComponent(sql)}`);
+                    carregarUsuarios();
+                }
+            }
+
+            function editarUsuario(nome, senha, clientes) {
+                document.getElementById("usuario").value = nome;
+                document.getElementById("senha").value = senha;
+                document.getElementById("clientes").value = clientes;
+                usuarioEditando = nome; // Define o usuário que está sendo editado
+            }
+
+            carregarUsuarios();
+        </script>
+    </main>
+</body>
+</html>
